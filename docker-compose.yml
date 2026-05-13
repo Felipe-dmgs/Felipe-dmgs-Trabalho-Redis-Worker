@@ -1,0 +1,33 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - redis_network
+
+  api:
+    build: .
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./app:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    networks:
+      - redis_network
+
+  worker:
+    build: . 
+    command: python -u worker.py
+    volumes:
+      - ./app:/app
+    depends_on:
+      - redis
+    networks:
+      - redis_network
+
+networks:
+  redis_network:
+    driver: bridge
